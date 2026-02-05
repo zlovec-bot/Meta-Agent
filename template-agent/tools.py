@@ -2,6 +2,8 @@
 标准工具定义 - 遵循 GLM-4 Tool Calling 协议
 """
 from ddgs import DDGS
+import pyttsx3
+import speech_recognition as sr
 
 def get_tool_definitions():
     """返回符合 GLM-4 Tool Calling 格式的工具定义"""
@@ -65,6 +67,56 @@ def get_tool_definitions():
                     "required": ["file_path", "content"]
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "text_to_speech",
+                "description": "将文本转换为语音播放（离线TTS）",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "text": {
+                            "type": "string",
+                            "description": "要朗读的文本内容"
+                        },
+                        "rate": {
+                            "type": "integer",
+                            "description": "语速，范围50-300，默认150",
+                            "default": 150
+                        },
+                        "volume": {
+                            "type": "number",
+                            "description": "音量，范围0.0-1.0，默认1.0",
+                            "default": 1.0
+                        }
+                    },
+                    "required": ["text"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "speech_to_text",
+                "description": "监听麦克风输入并将语音转换为文字",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "timeout": {
+                            "type": "integer",
+                            "description": "监听超时时间（秒），默认5秒",
+                            "default": 5
+                        },
+                        "language": {
+                            "type": "string",
+                            "description": "识别语言代码，如'zh-CN'(中文)、'en-US'(英文)，默认'zh-CN'",
+                            "default": "zh-CN"
+                        }
+                    },
+                    "required": []
+                }
+            }
         }
     ]
 
@@ -77,6 +129,17 @@ def execute_tool(tool_name, arguments):
         return read_file(arguments.get("file_path"))
     elif tool_name == "write_file":
         return write_file(arguments.get("file_path"), arguments.get("content"))
+    elif tool_name == "text_to_speech":
+        return text_to_speech(
+            arguments.get("text"),
+            arguments.get("rate", 150),
+            arguments.get("volume", 1.0)
+        )
+    elif tool_name == "speech_to_text":
+        return speech_to_text(
+            arguments.get("timeout", 5),
+            arguments.get("language", "zh-CN")
+        )
     else:
         return {"error": f"未知工具: {tool_name}"}
 
@@ -133,3 +196,82 @@ def write_file(file_path, content):
         return {"success": True, "message": f"成功写入文件: {file_path}"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def text_to_speech(text, rate=150, volume=1.0):
+    """文字转语音（TTS）- 离线实现"""
+    try:
+        engine = pyttsx3.init()
+        
+        # 设置语速
+        engine.setProperty('rate', rate)
+        
+        # 设置音量
+        engine.setProperty('volume', volume)
+        
+        # 播放语音
+        print(f"[TTS] 正在播放: {text[:50]}{'...' if len(text) > 50 else ''}")
+        engine.say(text)
+        engine.runAndWait()
+        
+        return {
+            "success": True,
+            "message": f"已成功播放语音",
+            "text": text,
+            "rate": rate,
+            "volume": volume
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"语音播放失败: {str(e)}"
+        }
+
+
+def speech_to_text(timeout=5, language="zh-CN"):
+    """语音转文字（STT）"""
+    try:
+        recognizer = sr.Recognizer()
+        
+        with sr.Microphone() as source:
+            print(f"[STT] 请说话... (超时时间: {timeout}秒)")
+            
+            # 调整环境噪音
+            recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            
+            # 监听语音
+            audio = recognizer.listen(source, timeout=timeout, phrase_time_limit=10)
+        
+        print("[STT] 正在识别...")
+        
+        # 使用 Google 语音识别（免费，需要网络）
+        text = recognizer.recognize_google(audio, language=language)
+        
+        print(f"[STT] 识别结果: {text}")
+        
+        return {
+            "success": True,
+            "text": text,
+            "language": language
+        }
+        
+    except sr.WaitTimeoutError:
+        return {
+            "success": False,
+            "error": "监听超时，未检测到语音输入"
+        }
+    except sr.UnknownValueError:
+        return {
+            "success": False,
+            "error": "无法识别语音内容，请说清楚一些"
+        }
+    except sr.RequestError as e:
+        return {
+            "success": False,
+            "error": f"语音识别服务错误: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"语音识别失败: {str(e)}"
+        }
