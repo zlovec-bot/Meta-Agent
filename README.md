@@ -53,6 +53,10 @@ venv\Scripts\activate  # Windows
 # 安装依赖
 pip install -r requirements.txt
 
+# 注意：项目使用 DuckDuckGo Search (duckduckgo-search) 进行网络搜索
+# 如果安装失败，可以单独安装：
+# pip install duckduckgo-search>=5.0.0
+
 # 配置 API 密钥
 copy .env.example .env
 # 编辑 .env 文件，填入你的 GLM_API_KEY
@@ -153,12 +157,16 @@ A: 直接编辑 `template-agent/` 目录下的文件，Meta-Agent 会自动使�
 **Q: 如何避免覆盖已生成的 Agent？**
 A: 始终使用 `python demo.py` 运行，并为每个 Agent 指定不同的名称。避免直接运行 `meta_agent.py`。
 
+**Q: 网络搜索功能无法使用？**
+A: 确保已安装 duckduckgo-search 库：`pip install duckduckgo-search>=5.0.0`。如果仍有问题，检查网络连接和防火墙设置。
+
 ## 技术栈
 
 - Python 3.9+
 - 智谱 AI GLM-4 模型
 - zhipuai SDK
 - python-dotenv
+- duckduckgo-search (网络搜索功能)
 
 ## 许可证
 
