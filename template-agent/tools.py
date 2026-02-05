@@ -1,6 +1,7 @@
 """
 标准工具定义 - 遵循 GLM-4 Tool Calling 协议
 """
+from ddgs import DDGS
 
 def get_tool_definitions():
     """返回符合 GLM-4 Tool Calling 格式的工具定义"""
@@ -81,23 +82,37 @@ def execute_tool(tool_name, arguments):
 
 
 def web_search(query, num_results=5):
-    """模拟网络搜索"""
+    """真实网络搜索 - 使用 DuckDuckGo"""
     try:
-        # 这里使用简化的搜索示例
-        # 实际应用中应该使用真实的搜索 API
+        ddgs = DDGS()
+        results = list(ddgs.text(query, max_results=num_results))
+        
+        # 调试：打印原始结果
+        print(f"[DEBUG] 搜索到 {len(results)} 条结果")
+        
+        if not results:
+            return {
+                "success": False, 
+                "error": "未找到搜索结果，请尝试其他关键词"
+            }
+        
+        formatted_results = []
+        for r in results:
+            formatted_results.append({
+                "title": r.get("title", "无标题"),
+                "snippet": r.get("body", "无描述"),
+                "url": r.get("href", "")
+            })
+        
         return {
             "success": True,
-            "results": [
-                {
-                    "title": f"搜索结果 {i+1}",
-                    "snippet": f"关于 '{query}' 的信息...",
-                    "url": f"https://example.com/result{i+1}"
-                }
-                for i in range(num_results)
-            ]
+            "query": query,
+            "count": len(formatted_results),
+            "results": formatted_results
         }
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        print(f"[ERROR] 搜索失败: {str(e)}")
+        return {"success": False, "error": f"搜索出错: {str(e)}"}
 
 
 def read_file(file_path):

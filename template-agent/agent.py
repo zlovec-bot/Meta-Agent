@@ -108,12 +108,26 @@ def main():
     """测试 Agent"""
     agent = Agent(system_prompt="你是一个有用的 AI 助手，可以搜索网络和操作文件。")
     
-    # 测试对话
-    user_input = "搜索一下 Python 最新版本的信息"
-    print(f"用户: {user_input}")
+    print("=== Template Agent ===")
+    print("输入 '退出' 或 'quit' 结束对话\n")
     
-    response = agent.run(user_input)
-    print(f"\nAgent: {response}")
+    while True:
+        # 获取用户输入
+        user_input = input("用户: ").strip()
+        
+        # 检查是否退出
+        if user_input.lower() in ['退出', 'quit', 'exit', 'q']:
+            print("再见！")
+            break
+            
+        # 检查空输入
+        if not user_input:
+            print("请输入有效内容")
+            continue
+        
+        # 运行 Agent
+        response = agent.run(user_input)
+        print(f"\nAgent: {response}\n")
 
 
 if __name__ == "__main__":
