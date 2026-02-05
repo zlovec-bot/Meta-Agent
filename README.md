@@ -77,21 +77,27 @@ pip install -r requirements.txt
 copy .env.example .env
 # 编辑 .env 文件，填入你的 GLM_API_KEY
 
-# 运行演示
+# 运行交互式演示（推荐）
 python demo.py
 
-# 或直接运行主程序
-python meta_agent.py
+# ⚠️ 注意：不要直接运行 python meta_agent.py
+# 这会使用硬编码的需求，可能覆盖已生成的 agent
 ```
 
 ## 使用示例
 
 ### 创建自定义 Agent
 
-编辑 `meta-agent/meta_agent.py` 中的 `requirement` 变量：
+运行 `demo.py` 并输入你的需求：
 
-```python
-requirement = """
+```bash
+cd meta-agent
+python demo.py
+```
+
+然后输入需求示例：
+
+```
 创建一个数据分析 Agent。
 
 功能要求：
@@ -100,8 +106,9 @@ requirement = """
 3. 生成分析报告
 
 Agent 名称：data-analysis-agent
-"""
 ```
+
+生成的 Agent 会保存在 `generated-agents/data-analysis-agent/` 目录
 
 ### 批量测试
 
@@ -142,6 +149,9 @@ A: 检查 API 密钥配置、依赖安装和 Python 版本（需要 3.9+）。
 
 **Q: 如何修改范例 Agent？**
 A: 直接编辑 `template-agent/` 目录下的文件，Meta-Agent 会自动使用最新版本。
+
+**Q: 如何避免覆盖已生成的 Agent？**
+A: 始终使用 `python demo.py` 运行，并为每个 Agent 指定不同的名称。避免直接运行 `meta_agent.py`。
 
 ## 技术栈
 
