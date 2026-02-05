@@ -99,7 +99,7 @@ def get_tool_definitions():
             "type": "function",
             "function": {
                 "name": "speech_to_text",
-                "description": "监听麦克风输入并将语音转换为文字",
+                "description": "监听麦克风输入并将语音转换为文字。调用此工具后会进入语音对话模式，你需要用 text_to_speech 朗读回复",
                 "parameters": {
                     "type": "object",
                     "properties": {

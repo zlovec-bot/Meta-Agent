@@ -14,6 +14,7 @@ class Agent:
         self.system_prompt = system_prompt
         self.conversation_history = []
         self.tools = get_tool_definitions()
+        self.voice_mode = False  # 语音模式标志
         
     def reset_conversation(self):
         """重置对话历史"""
@@ -21,6 +22,11 @@ class Agent:
         
     def run(self, user_message):
         """运行 Agent 主循环"""
+        # 检测关闭语音命令
+        if self.voice_mode and any(keyword in user_message for keyword in ["关闭语音", "退出语音", "停止语音"]):
+            self.voice_mode = False
+            print("[语音模式] 已关闭")
+        
         # 添加用户消息到历史
         self.conversation_history.append({
             "role": "user",
@@ -79,6 +85,19 @@ class Agent:
                         "content": json.dumps(tool_result, ensure_ascii=False)
                     })
                     
+                    # 检测语音模式切换并处理识别的文字
+                    if tool_name == "speech_to_text" and tool_result.get("success"):
+                        self.voice_mode = True
+                        print("[语音模式] 已开启")
+                        recognized_text = tool_result.get("text", "")
+                        if recognized_text:
+                            print(f"[语音输入] {recognized_text}")
+                            # 将识别的文字作为新的用户消息添加到历史
+                            self.conversation_history.append({
+                                "role": "user",
+                                "content": recognized_text
+                            })
+                    
             else:
                 # 没有工具调用，返回最终响应
                 final_response = response.choices[0].message.content
@@ -106,7 +125,17 @@ class Agent:
 
 def main():
     """测试 Agent"""
-    agent = Agent(system_prompt="你是一个有用的 AI 助手，可以搜索网络和操作文件。")
+    agent = Agent(system_prompt="""你是一个有用的 AI 助手，可以搜索网络和操作文件。
+
+语音交互规则：
+1. 当用户说"打开语音"、"开启语音"、"语音对话"时，你必须立即调用 speech_to_text 工具来监听用户的语音输入
+2. speech_to_text 工具会识别用户的语音并转换为文字，识别的文字会作为用户的新消息
+3. 收到语音识别的文字后，你需要：
+   - 理解用户说的内容并生成合适的回复
+   - 然后调用 text_to_speech 工具朗读你的回复（不是朗读用户说的话）
+4. 在语音对话模式下，每次回复都要用 text_to_speech 朗读
+5. 如果用户说"关闭语音"、"退出语音"，则退出语音模式，只返回文字
+6. 重要：不要用 TTS 重复用户说的话，要朗读你自己的回复！""")
     
     print("=== Template Agent ===")
     print("输入 '退出' 或 'quit' 结束对话\n")
