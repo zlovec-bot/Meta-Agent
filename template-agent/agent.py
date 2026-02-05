@@ -105,6 +105,36 @@ class Agent:
                     "role": "assistant",
                     "content": final_response
                 })
+                
+                # 语音模式：朗读回复并继续监听
+                if self.voice_mode:
+                    print(f"\nAgent: {final_response}")
+                    
+                    # 朗读回复
+                    tts_result = execute_tool("text_to_speech", {"text": final_response})
+                    
+                    if tts_result.get("success"):
+                        # 朗读成功后，继续监听下一句话
+                        print("\n[语音模式] 继续监听...")
+                        stt_result = execute_tool("speech_to_text", {"language": "zh-CN", "timeout": 5})
+                        
+                        if stt_result.get("success"):
+                            recognized_text = stt_result.get("text", "")
+                            print(f"[语音输入] {recognized_text}")
+                            
+                            # 检测关闭语音命令
+                            if any(keyword in recognized_text for keyword in ["关闭语音", "退出语音", "停止语音"]):
+                                self.voice_mode = False
+                                print("[语音模式] 已关闭")
+                                return final_response
+                            
+                            # 递归处理新的语音输入
+                            return self.run(recognized_text)
+                        else:
+                            # STT 失败，退出语音模式
+                            print(f"[语音模式] 监听失败: {stt_result.get('error')}")
+                            self.voice_mode = False
+                
                 return final_response
                 
         return "达到最大迭代次数"
@@ -132,10 +162,11 @@ def main():
 2. speech_to_text 工具会识别用户的语音并转换为文字，识别的文字会作为用户的新消息
 3. 收到语音识别的文字后，你需要：
    - 理解用户说的内容并生成合适的回复
-   - 然后调用 text_to_speech 工具朗读你的回复（不是朗读用户说的话）
-4. 在语音对话模式下，每次回复都要用 text_to_speech 朗读
-5. 如果用户说"关闭语音"、"退出语音"，则退出语音模式，只返回文字
-6. 重要：不要用 TTS 重复用户说的话，要朗读你自己的回复！""")
+   - 调用 text_to_speech 工具朗读你的回复（不是朗读用户说的话）
+   - 朗读完成后，立即再次调用 speech_to_text 继续监听下一句话
+4. 在语音对话模式下，形成循环：监听 → 回复 → 朗读 → 再次监听
+5. 如果用户说"关闭语音"、"退出语音"、"停止语音"，则不要再调用 speech_to_text，退出语音模式
+6. 重要：语音模式下每次回复后都要自动继续监听，保持对话连续性！""")
     
     print("=== Template Agent ===")
     print("输入 '退出' 或 'quit' 结束对话\n")
