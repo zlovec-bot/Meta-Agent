@@ -29,6 +29,37 @@ class MetaAgent:
 - 保持良好的错误处理和日志记录
 - 确保生成的代码可以直接运行
 - 所有代码使用中文注释
+
+【关键】修改 tools.py 时必须包含以下三个部分：
+1. get_tool_definitions() - 工具定义函数
+2. execute_tool() - 工具执行调度函数（必须包含，用于根据工具名调用对应函数）
+3. 具体的工具实现函数（如 web_search, read_file 等）
+
+修改 tools.py 的完整结构示例：
+```python
+def get_tool_definitions():
+    # 返回工具定义列表
+    return [...]
+
+def execute_tool(tool_name, arguments):
+    # 根据工具名调用对应函数
+    if tool_name == "tool1":
+        return tool1(...)
+    elif tool_name == "tool2":
+        return tool2(...)
+    else:
+        return {"error": f"未知工具: {tool_name}"}
+
+def tool1(...):
+    # 具体工具实现
+    pass
+
+def tool2(...):
+    # 具体工具实现
+    pass
+```
+
+务必确保 execute_tool() 函数存在，否则 agent.py 无法调用工具！
 """
         self.conversation_history = []
         self.tools = get_meta_tool_definitions()
