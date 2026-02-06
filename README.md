@@ -53,9 +53,12 @@ venv\Scripts\activate  # Windows
 # 安装依赖
 pip install -r requirements.txt
 
-# 注意：项目使用 DuckDuckGo Search (duckduckgo-search) 进行网络搜索
-# 如果安装失败，可以单独安装：
-# pip install duckduckgo-search>=5.0.0
+# Windows 用户注意：如果 pyaudio 安装失败，请使用以下命令
+pip install pipwin
+pipwin install pyaudio
+
+# 或者跳过 pyaudio（将无法使用语音功能）
+# pip install zhipuai python-dotenv requests duckduckgo-search pyttsx3 SpeechRecognition
 
 # 配置 API 密钥
 copy .env.example .env
@@ -160,6 +163,22 @@ A: 始终使用 `python demo.py` 运行，并为每个 Agent 指定不同的名�
 **Q: 网络搜索功能无法使用？**
 A: 确保已安装 duckduckgo-search 库：`pip install duckduckgo-search>=5.0.0`。如果仍有问题，检查网络连接和防火墙设置。
 
+**Q: pyaudio 安装失败怎么办？**
+A: Windows 用户推荐使用 `pipwin install pyaudio` 或下载预编译的 wheel 文件。详见"依赖库说明"部分。如果不需要语音功能，可以跳过 pyaudio 安装。
+
+**Q: 语音识别功能需要联网吗？**
+A: 是的。`speech_to_text` 使用 Google Speech Recognition API，需要网络连接。`text_to_speech` 是离线的，不需要联网。
+
+**Q: 如何测试语音功能是否正常？**
+A: 运行 template-agent 后，输入"打开语音"或"语音对话"，系统会开始监听麦克风。如果能正常识别并朗读回复，说明功能正常。
+
+**Q: 麦克风无法识别语音？**
+A: 
+1. 检查麦克风是否正常工作（在系统设置中测试）
+2. 确认 pyaudio 已正确安装
+3. 检查防火墙是否阻止了 Python 访问麦克风
+4. 尝试增加 `speech_to_text` 的 timeout 参数
+
 ## 技术栈
 
 - Python 3.9+
@@ -167,6 +186,79 @@ A: 确保已安装 duckduckgo-search 库：`pip install duckduckgo-search>=5.0.0
 - zhipuai SDK
 - python-dotenv
 - duckduckgo-search (网络搜索功能)
+
+## 依赖库说明
+
+### 核心依赖
+- **zhipuai** (>=2.0.0): 智谱 AI SDK，用于调用 GLM-4 模型
+- **python-dotenv** (>=1.0.0): 环境变量管理
+- **requests** (>=2.31.0): HTTP 请求库
+
+### 功能依赖
+- **duckduckgo-search** (>=5.0.0): 网络搜索功能
+- **pyttsx3**: 离线文字转语音（TTS）
+- **SpeechRecognition**: 语音识别框架
+- **pyaudio**: 音频输入/输出，麦克风支持
+
+### 安装说明
+
+#### 标准安装（Linux/macOS）
+```bash
+pip install -r requirements.txt
+```
+
+#### Windows 安装指南
+
+**常规依赖**（通常无问题）：
+```bash
+pip install zhipuai python-dotenv requests duckduckgo-search pyttsx3 SpeechRecognition
+```
+
+**pyaudio 安装**（Windows 用户特别注意）：
+
+pyaudio 在 Windows 上可能遇到编译错误：
+```
+error: Microsoft Visual C++ 14.0 or greater is required
+```
+
+**解决方案 1：使用 pipwin（推荐）**
+```bash
+pip install pipwin
+pipwin install pyaudio
+```
+
+**解决方案 2：使用预编译 wheel 文件**
+```bash
+# 1. 访问 https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
+# 2. 下载对应 Python 版本的 .whl 文件
+#    例如：PyAudio-0.2.11-cp39-cp39-win_amd64.whl (Python 3.9, 64位)
+# 3. 安装下载的文件
+pip install PyAudio-0.2.11-cp39-cp39-win_amd64.whl
+```
+
+**解决方案 3：安装 Visual C++ 构建工具**
+```bash
+# 下载并安装 Microsoft C++ Build Tools
+# https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# 然后再执行：
+pip install pyaudio
+```
+
+**验证安装**：
+```python
+# 测试 pyaudio 是否安装成功
+python -c "import pyaudio; print('pyaudio 安装成功')"
+```
+
+### 可选：跳过语音功能
+
+如果不需要语音交互功能，可以跳过 pyaudio 安装：
+```bash
+# 安装除 pyaudio 外的所有依赖
+pip install zhipuai python-dotenv requests duckduckgo-search pyttsx3 SpeechRecognition
+```
+
+注意：跳过 pyaudio 后，`speech_to_text` 工具将无法使用，但其他功能正常。
 
 ## 许可证
 
